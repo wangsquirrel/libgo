@@ -524,5 +524,19 @@ TEST(Channel, close)
         EXPECT_EQ(-1, k);
         EXPECT_TRUE(ch3.Closed()); 
     };
+    co_chan<int> ch4(3);
+    go [ch4]() {
+        EXPECT_TRUE(ch4.TryPush(1));
+        EXPECT_TRUE(ch4.TryPush(2));
+        ch4.Close();
+        EXPECT_FALSE(ch4.TryPush(3));
+        int i = -1, j = -1, k = -1;
+        EXPECT_TRUE(ch4.TryPop(i));
+        EXPECT_TRUE(ch4.TimedPop(j, milliseconds(100)));
+        EXPECT_FALSE(ch4.TryPop(k));
+        EXPECT_EQ(1, i);
+        EXPECT_EQ(2, j);
+        EXPECT_EQ(-1, k);
+    };
     WaitUntilNoTask();
 }
