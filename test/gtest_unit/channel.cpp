@@ -475,3 +475,54 @@ TEST(Channel, capacity0Timed)
         delete[] p;
     }
 }
+
+TEST(Channel, close)
+{
+    //co_opt.debug = co::dbg_channel;
+    //co_opt.debug_output = fopen("log", "w");
+    co_chan<int> ch1(10);
+    co_chan<int> ch2(20);
+    auto f = [](co_chan<int> ch) {
+        
+        int i = -1, j = -1, k = -1;
+        ch << 1;
+        ch << 2;
+        EXPECT_FALSE(ch.Closed());
+        ch.Close();
+        ch << 5;
+        for (int i = 10; i < 50; i++)
+            ch << i;
+        EXPECT_EQ(2, ch.size());
+        EXPECT_TRUE(ch.Closed());
+        ch >> i;
+        ch >> j;
+        ch >> k;
+        ch >> nullptr;
+        EXPECT_TRUE(ch.Closed());
+        EXPECT_EQ(1, i);
+        EXPECT_EQ(2, j);
+        EXPECT_EQ(-1, k);
+    };
+    auto f1 = std::bind(f, ch1);
+    auto f2 = std::bind(f, ch2);
+    go f1;
+    go f2;
+    co_chan<int> ch3;
+    go [ch3]() {
+        ch3 << 1;
+        ch3 << 2;
+        ch3.Close();
+    };
+    go [ch3]() {
+        int i = -1, j = -1, k = -1;
+        ch3 >> i;
+        EXPECT_EQ(1, i);
+        EXPECT_FALSE(ch3.Closed());
+        ch3 >> j;
+        EXPECT_EQ(2, j);
+        ch3 >> nullptr;
+        EXPECT_EQ(-1, k);
+        EXPECT_TRUE(ch3.Closed()); 
+    };
+    WaitUntilNoTask();
+}

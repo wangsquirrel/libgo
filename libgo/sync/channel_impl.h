@@ -15,6 +15,7 @@ struct ChannelImpl : public IdCounter<ChannelImpl<T>>
     virtual bool Pop(T & t, bool bWait,
             FastSteadyClock::time_point deadline = FastSteadyClock::time_point{}) = 0;
     virtual void Close() = 0;
+    virtual bool Closed() = 0;
     virtual std::size_t Size() = 0;
     virtual bool Empty() = 0;
 };

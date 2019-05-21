@@ -187,7 +187,7 @@ public:
                         Processer::StaticCoYield();
                     }
 
-                    if (closed_) {
+                    if (closed_ && Size() == 0) {
                         DebugPrint(dbg_channel, "[id=%ld] Pop failed by closed.", this->getId());
                         return false;
                     } else if (!bWait) {
@@ -202,7 +202,7 @@ public:
                 wait_ -= write1;
                 return true;
             } else {
-                if (closed_) {
+                if (closed_ && Size() == 0) {
                     DebugPrint(dbg_channel, "[id=%ld] Pop failed by closed.", this->getId());
                     return false;
                 } else if (!bWait) {
@@ -222,7 +222,7 @@ public:
         entry.pvalue = &t;
         auto cond = [&](size_t size) -> typename cond_t::CondRet {
             typename cond_t::CondRet ret{true, true};
-            if (closed_) {
+            if (closed_ && Size() == 0) {
                 ret.canQueue = false;
                 return ret;
             }
@@ -238,7 +238,7 @@ public:
 
         switch ((int)cv_status) {
             case (int)cond_t::cv_status::no_timeout:
-                if (closed_) {
+                if (closed_ && Size() == 0) {
                     DebugPrint(dbg_channel, "[id=%ld] Pop failed by closed.", this->getId());
                     return false;
                 }
@@ -252,7 +252,7 @@ public:
                 return false;
 
             case (int)cond_t::cv_status::no_queued:
-                if (closed_)
+                if (closed_ && Size() == 0)
                     DebugPrint(dbg_channel, "[id=%ld] Pop failed by closed.", this->getId());
                 else
                     DebugPrint(dbg_channel, "[id=%ld] Pop failed.", this->getId());
@@ -293,7 +293,11 @@ public:
 
         closed_ = true;
         rq_.notify_all();
-        wq_.notify_all();
+    }
+
+    bool Closed()
+    {
+        return closed_; 
     }
 };
 

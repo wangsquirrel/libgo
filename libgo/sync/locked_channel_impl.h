@@ -124,9 +124,9 @@ public:
     {
         DebugPrint(dbg_channel, "[id=%ld] Pop ->", this->getId());
 
-        if (closed_) return false;
+        if (closed_ && Size() == 0) return false;
         std::unique_lock<lock_t> lock(lock_);
-        if (closed_) return false;
+        if (closed_ && Size() == 0) return false;
 
         if (capacity_ > 0) {
             if (pop(t)) {
@@ -160,7 +160,7 @@ public:
 
         switch ((int)cv_status) {
             case (int)wait_queue_t::cv_status::no_timeout:
-                if (closed_) {
+                if (closed_ && Size() == 0) {
                     DebugPrint(dbg_channel, "[id=%ld] Pop failed by closed.", this->getId());
                     return false;
                 }
@@ -209,6 +209,12 @@ public:
         closed_ = true;
         rq_.notify_all();
         wq_.notify_all();
+    }
+    
+    bool Closed()
+    {
+       std::unique_lock<lock_t> lock(lock_); 
+       return closed_;
     }
 };
 

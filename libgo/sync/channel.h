@@ -114,6 +114,10 @@ public:
         impl_->Close();
     }
 
+    bool Closed() const {
+        return impl_->Closed();
+    }
+
     // ------------- 兼容旧版接口
     bool empty() const
     {
